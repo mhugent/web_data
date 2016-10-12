@@ -20,6 +20,13 @@
 #include <QProgressDialog>
 #include <QTreeWidgetItem>
 
+//legend
+#include "qgslayertree.h"
+#include "qgslayertreegroup.h"
+#include "qgslayertreelayer.h"
+#include "qgslayertreemodel.h"
+#include "qgslayertreeview.h"
+
 static const QString WFS_NAMESPACE = "http://www.opengis.net/wfs";
 
 WebDataModel::WebDataModel( QgisInterface* iface ): QStandardItemModel(), mCapabilitiesReply( 0 ), mIface( iface )
@@ -916,7 +923,7 @@ bool WebDataModel::exchangeLayer( const QString& layerId, QgsMapLayer* newLayer 
   QgsLegendInterface* legendIface = mIface->legendInterface();
   if ( legendIface )
   {
-    legendIface->moveLayer( newLayer, oldLayer );
+    legendMoveLayer( newLayer, oldLayer );
     legendIface->refreshLayerSymbology( newLayer );
   }
 
@@ -1197,5 +1204,45 @@ QString WebDataModel::xmlFilePath() const
   QFileInfo fi( QgsApplication::qgisUserDbFilePath() );
   QString path = fi.absolutePath() + "/webdata.xml";
   return path;
+}
+
+void WebDataModel::legendMoveLayer( const QgsMapLayer* ml, const QgsMapLayer* after )
+{
+    if( !ml || !after )
+    {
+        return;
+    }
+
+    QgsLayerTreeView* layerTreeView = mIface->layerTreeView();
+    if( !layerTreeView )
+    {
+        return;
+    }
+
+    QgsLayerTreeLayer* mlTreeLayer = layerTreeView->layerTreeModel()->rootGroup()->findLayer( ml->id() );
+    QgsLayerTreeLayer* afterTreeLayer = layerTreeView->layerTreeModel()->rootGroup()->findLayer( after->id() );
+    if ( !mlTreeLayer || !afterTreeLayer )
+    {
+        return;
+    }
+
+       //group of layer to move into
+      QgsLayerTreeGroup* afterTreeGroup = QgsLayerTree::toGroup( afterTreeLayer->parent() );
+      if ( !afterTreeGroup )
+      {
+        return;
+      }
+
+      //find index
+      QList<QgsLayerTreeNode*> childList = afterTreeGroup->children();
+      int afterIndex = childList.indexOf( afterTreeLayer );
+      if ( afterIndex == -1 )
+      {
+        return;
+      }
+      afterTreeGroup->insertLayer( afterIndex + 1, const_cast<QgsMapLayer*>( ml ) ); //that function should really accept a const layer
+
+      QgsLayerTreeGroup* nodeLayerParentGroup = QgsLayerTree::toGroup( mlTreeLayer->parent() );
+      nodeLayerParentGroup->removeChildNode( mlTreeLayer );
 }
 

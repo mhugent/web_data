@@ -42,9 +42,12 @@ INCLUDE_DIRECTORIES(
      ${CMAKE_CURRENT_BINARY_DIR}/../../ui
      ${GDAL_INCLUDE_DIR}
      ../../core
+     ../../core/geometry
+     ../../core/layertree
      ../../core/raster
      ../../core/symbology-ng
      ../../gui
+     ../../gui/layertree
      ..
      .
 )

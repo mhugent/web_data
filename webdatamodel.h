@@ -64,6 +64,9 @@ class WebDataModel: public QStandardItemModel
 
     /**Returns path to web.xml. Creates the file if not there*/
     QString xmlFilePath() const;
+
+    /**Modes a layer after ml in the legend tree*/
+    void legendMoveLayer( const QgsMapLayer* ml, const QgsMapLayer* after );
 };
 
 #endif //WEBDATAMODEL_H
